@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;900&display=swap');
+        body { font-family: 'Tajawal', sans-serif; background: radial-gradient(circle at center, #0f172a, #020617); color: white; min-height: 100vh; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .neon-text { text-shadow: 0 0 10px #3b82f6, 0 0 20px #3b82f6; }
+        .card-hover:hover { transform: translateY(-15px) scale(1.02); box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3); }
+        .gradient-border { border-image: linear-gradient(to right, #3b82f6, #8b5cf6) 1; }
+    </style>
+</head>
+<body class="p-4 md:p-12">
+
+    <nav class="flex justify-between items-center mb-20">
+        <h1 class="text-6xl font-black italic tracking-tighter text-blue-500 neon-text">ZONK</h1>
+        <div class="flex gap-8 text-sm uppercase tracking-widest cursor-pointer">
+            <span class="hover:text-blue-400 transition">الرئيسية</span>
+            <span class="hover:text-blue-400 transition">المتجر</span>
+            <span class="bg-blue-600 px-6 py-2 rounded-full font-bold">تسجيل الدخول</span>
+        </div>
+    </nav>
+
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" id="products">
+        </section>
+
+    <script>
+        const products = [
+            {name: "Core Quantum", price: "50,000 CR", img: "https://images.unsplash.com/photo-1614729939124-032f0b56c39f?auto=format&fit=crop&w=800&q=80"},
+            {name: "Celestial Blade", price: "50,000 CR", img: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=800&q=80"},
+            {name: "Hyper-Loop", price: "50,000 CR", img: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=800&q=80"},
+            {name: "Infinite Orb", price: "50,000 CR", img: "https://images.unsplash.com/photo-1544652478-6853079a556d?auto=format&fit=crop&w=800&q=80"}
+        ];
+
+        const container = document.getElementById('products');
+        products.forEach(p => {
+            container.innerHTML += `
+                <div class="glass p-5 rounded-3xl card-hover transition-all duration-500 border border-white/10">
+                    <div class="overflow-hidden rounded-2xl mb-4">
+                        <img src="${p.img}" class="w-full h-64 object-cover hover:scale-110 transition-transform duration-700">
+                    </div>
+                    <h3 class="text-2xl font-bold">${p.name}</h3>
+                    <p class="text-blue-400 text-lg font-black mt-2">${p.price}</p>
+                    <button class="w-full mt-6 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 font-bold hover:from-purple-600 hover:to-blue-600 transition shadow-lg shadow-blue-900/50">
+                        اقتناء المنتج
+                    </button>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>
