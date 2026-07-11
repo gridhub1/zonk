@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: { extend: {} }
-        }
+        tailwind.config = { darkMode: 'class', theme: { extend: {} } }
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;900&display=swap');
@@ -20,75 +18,71 @@
         .light .glass { background: rgba(255, 255, 255, 0.8); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .neon-text { text-shadow: 0 0 10px #3b82f6, 0 0 20px #3b82f6; }
         .card-hover:hover { transform: translateY(-15px) scale(1.02); box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3); }
+        @keyframes bounce-cart { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+        .animate-bounce-cart { animation: bounce-cart 0.3s ease; }
         @media (max-width: 640px) { .text-6xl { font-size: 2.5rem; } }
     </style>
 </head>
 <body class="p-4 md:p-12">
 
-    <nav class="flex flex-col sm:flex-row justify-between items-center mb-10 md:mb-20 gap-4">
-        <h1 class="text-4xl sm:text-6xl font-black italic tracking-tighter text-blue-500 neon-text">ZONK</h1>
-        <div class="flex items-center gap-4 sm:gap-8 text-xs sm:text-sm uppercase tracking-widest">
+    <nav class="flex flex-col sm:flex-row justify-between items-center mb-20 gap-4">
+        <h1 class="text-6xl font-black italic tracking-tighter text-blue-500 neon-text">ZONK</h1>
+        <div class="flex items-center gap-8 text-sm uppercase tracking-widest">
             <span class="cursor-pointer hover:text-blue-500 transition">الرئيسية</span>
-            <span class="cursor-pointer hover:text-blue-500 transition" onclick="toggleCart()">السلة (<span id="cart-count">0</span>)</span>
-            <button onclick="document.documentElement.classList.toggle('dark')" class="p-2 rounded-full bg-gray-200 dark:bg-gray-800">🌓</button>
+            <div class="relative cursor-pointer" onclick="showCheckoutModal()">
+                <i class="fa-solid fa-cart-shopping text-xl"></i>
+                <span id="cart-count" class="absolute -top-4 -right-4 bg-blue-600 text-white text-xs w-6 h-6 flex items-center justify-center rounded-full font-bold">0</span>
+            </div>
+            <button onclick="document.documentElement.classList.toggle('dark')" class="p-2 rounded-full bg-gray-200 dark:bg-gray-800"><i class="fa-solid fa-moon"></i></button>
         </div>
     </nav>
 
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8" id="products"></section>
-
-    <div id="cart-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-        <div class="glass w-full max-w-lg p-8 rounded-3xl text-center">
-            <h2 class="text-3xl font-bold mb-6">سلة التسوق</h2>
-            <div id="cart-items" class="mb-6 max-h-60 overflow-y-auto"></div>
-            <button onclick="showCheckout()" class="w-full py-4 rounded-2xl bg-blue-600 font-bold">إتمام الشراء</button>
-            <button onclick="toggleCart()" class="mt-4 text-gray-400">إغلاق</button>
-        </div>
-    </div>
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8" id="products"></section>
 
     <div id="checkout-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
         <div class="glass w-full max-w-lg p-8 rounded-3xl">
-            <h2 class="text-2xl font-bold mb-4">بيانات التوصيل</h2>
-            <input type="text" placeholder="الاسم الكامل" class="w-full p-3 mb-3 bg-white/10 rounded-xl border border-white/20">
-            <input type="text" placeholder="العنوان" class="w-full p-3 mb-3 bg-white/10 rounded-xl border border-white/20">
-            <button onclick="alert('تم الطلب بنجاح!')" class="w-full py-4 rounded-2xl bg-green-600 font-bold">تأكيد الطلب</button>
+            <h2 class="text-2xl font-bold mb-6 text-center">بيانات التوصيل</h2>
+            <input type="text" placeholder="الاسم الكامل" class="w-full p-4 mb-4 bg-white/10 rounded-xl border border-white/20 outline-none focus:border-blue-500">
+            <input type="text" placeholder="العنوان بالتفصيل" class="w-full p-4 mb-6 bg-white/10 rounded-xl border border-white/20 outline-none focus:border-blue-500">
+            <button onclick="alert('تم استلام طلبك بنجاح!')" class="w-full py-4 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 font-bold text-white mb-4">تأكيد الطلب</button>
+            <button onclick="closeCheckoutModal()" class="w-full text-gray-400">إلغاء</button>
         </div>
     </div>
 
     <script>
-        let cart = [];
         const products = [
-            {name: "Core Quantum", price: "50,000 CR", img: "https://images.unsplash.com/photo-1614729939124-032f0b56c39f?auto=format&fit=crop&w=800&q=80"},
-            {name: "Celestial Blade", price: "50,000 CR", img: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=800&q=80"},
-            {name: "Hyper-Loop", price: "50,000 CR", img: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=800&q=80"},
-            {name: "Infinite Orb", price: "50,000 CR", img: "https://images.unsplash.com/photo-1544652478-6853079a556d?auto=format&fit=crop&w=800&q=80"}
+            {name: "Core Quantum", price: "50,000 CR", icon: "fa-atom"},
+            {name: "Celestial Blade", price: "50,000 CR", icon: "fa-sword"},
+            {name: "Hyper-Loop", price: "50,000 CR", icon: "fa-infinity"},
+            {name: "Cyber Neural", price: "75,000 CR", icon: "fa-microchip"},
+            {name: "Void Engine", price: "90,000 CR", icon: "fa-rocket"},
+            {name: "Plasma Shield", price: "45,000 CR", icon: "fa-shield-halved"},
+            {name: "Gravity Core", price: "60,000 CR", icon: "fa-globe"},
+            {name: "Titan Gear", price: "110,000 CR", icon: "fa-gear"},
+            {name: "Nebula Lens", price: "35,000 CR", icon: "fa-camera"},
+            {name: "Stellar Drive", price: "85,000 CR", icon: "fa-database"},
+            {name: "Solar Flare", price: "95,000 CR", icon: "fa-sun"},
+            {name: "Ion Cannon", price: "65,000 CR", icon: "fa-bolt"}
         ];
 
-        function addToCart(name, price) {
-            cart.push({name, price});
-            document.getElementById('cart-count').innerText = cart.length;
-            alert("تمت الإضافة للسلة!");
+        function addToCart() {
+            const count = document.getElementById('cart-count');
+            count.innerText = parseInt(count.innerText) + 1;
+            count.classList.add('animate-bounce-cart');
+            setTimeout(() => count.classList.remove('animate-bounce-cart'), 300);
         }
 
-        function toggleCart() {
-            const modal = document.getElementById('cart-modal');
-            const items = document.getElementById('cart-items');
-            items.innerHTML = cart.map(item => `<div class="flex justify-between py-2 border-b border-white/10">${item.name} - ${item.price}</div>`).join('');
-            modal.classList.toggle('hidden');
-        }
-
-        function showCheckout() {
-            document.getElementById('cart-modal').classList.add('hidden');
-            document.getElementById('checkout-modal').classList.remove('hidden');
-        }
+        function showCheckoutModal() { document.getElementById('checkout-modal').classList.remove('hidden'); }
+        function closeCheckoutModal() { document.getElementById('checkout-modal').classList.add('hidden'); }
 
         const container = document.getElementById('products');
         products.forEach(p => {
             container.innerHTML += `
-                <div class="glass p-5 rounded-3xl card-hover transition-all duration-500 border border-white/10">
-                    <img src="${p.img}" class="w-full h-48 object-cover rounded-2xl mb-4">
-                    <h3 class="text-xl font-bold">${p.name}</h3>
-                    <p class="text-blue-500 font-black mt-2">${p.price}</p>
-                    <button onclick="addToCart('${p.name}', '${p.price}')" class="w-full mt-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 font-bold">إضافة للسلة</button>
+                <div class="glass p-8 rounded-3xl card-hover text-center border border-white/10">
+                    <i class="fa-solid ${p.icon} text-5xl text-blue-500 mb-6"></i>
+                    <h3 class="text-xl font-bold mb-2">${p.name}</h3>
+                    <p class="text-blue-400 font-black mb-6">${p.price}</p>
+                    <button onclick="addToCart()" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 transition font-bold">شراء الآن</button>
                 </div>
             `;
         });
