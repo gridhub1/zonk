@@ -29,7 +29,7 @@
         <h1 class="text-6xl font-black italic tracking-tighter text-blue-500 neon-text">ZONK</h1>
         <div class="flex items-center gap-8 text-sm uppercase tracking-widest">
             <span class="cursor-pointer hover:text-blue-500 transition">الرئيسية</span>
-            <div class="relative cursor-pointer" onclick="showCheckoutModal()">
+            <div class="relative cursor-pointer" onclick="toggleCartSidebar()">
                 <i class="fa-solid fa-cart-shopping text-xl"></i>
                 <span id="cart-count" class="absolute -top-4 -right-4 bg-blue-600 text-white text-xs w-6 h-6 flex items-center justify-center rounded-full font-bold">0</span>
             </div>
@@ -39,11 +39,30 @@
 
     <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8" id="products"></section>
 
+    <div id="cart-sidebar" class="fixed top-0 right-0 h-full w-full sm:w-96 glass z-50 translate-x-full transition-transform duration-300 flex flex-col p-6 shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold">سلة المشتريات</h2>
+            <button onclick="toggleCartSidebar()" class="text-xl p-2"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="cart-items-container" class="flex-1 overflow-y-auto space-y-4 mb-4">
+            <p class="text-gray-400 text-center mt-10" id="empty-cart-msg">السلة فارغة حالياً</p>
+        </div>
+        <div class="border-t border-white/10 pt-4">
+            <div class="flex justify-between font-bold text-lg mb-4">
+                <span>الإجمالي:</span>
+                <span id="cart-total" class="text-blue-500">0 CR</span>
+            </div>
+            <button onclick="showCheckoutModal()" class="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 font-bold transition">الانتقال لإتمام الشراء</button>
+        </div>
+    </div>
+
     <div id="checkout-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
         <div class="glass w-full max-w-lg p-8 rounded-3xl">
             <h2 class="text-2xl font-bold mb-6 text-center">بيانات التوصيل</h2>
-            <input type="text" placeholder="الاسم الكامل" class="w-full p-4 mb-4 bg-white/10 rounded-xl border border-white/20 outline-none focus:border-blue-500">
-            <input type="text" placeholder="العنوان بالتفصيل" class="w-full p-4 mb-6 bg-white/10 rounded-xl border border-white/20 outline-none focus:border-blue-500">
+            <input type="text" placeholder="الاسم الكامل" class="w-full p-4 mb-4 bg-white/10 rounded-xl border border-white/20 outline-none focus:border-blue-500 text-inherit">
+            <input type="tel" placeholder="رقم التليفون" class="w-full p-4 mb-4 bg-white/10 rounded-xl border border-white/20 outline-none focus:border-blue-500 text-inherit">
+            <input type="text" placeholder="العنوان بالتفصيل" class="w-full p-4 mb-4 bg-white/10 rounded-xl border border-white/20 outline-none focus:border-blue-500 text-inherit">
+            <input type="email" placeholder="البريد الإلكتروني (اختياري)" class="w-full p-4 mb-6 bg-white/10 rounded-xl border border-white/20 outline-none focus:border-blue-500 text-inherit">
             <button onclick="alert('تم استلام طلبك بنجاح!')" class="w-full py-4 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 font-bold text-white mb-4">تأكيد الطلب</button>
             <button onclick="closeCheckoutModal()" class="w-full text-gray-400">إلغاء</button>
         </div>
@@ -51,38 +70,135 @@
 
     <script>
         const products = [
-            {name: "Core Quantum", price: "50,000 CR", icon: "fa-atom"},
-            {name: "Celestial Blade", price: "50,000 CR", icon: "fa-sword"},
-            {name: "Hyper-Loop", price: "50,000 CR", icon: "fa-infinity"},
-            {name: "Cyber Neural", price: "75,000 CR", icon: "fa-microchip"},
-            {name: "Void Engine", price: "90,000 CR", icon: "fa-rocket"},
-            {name: "Plasma Shield", price: "45,000 CR", icon: "fa-shield-halved"},
-            {name: "Gravity Core", price: "60,000 CR", icon: "fa-globe"},
-            {name: "Titan Gear", price: "110,000 CR", icon: "fa-gear"},
-            {name: "Nebula Lens", price: "35,000 CR", icon: "fa-camera"},
-            {name: "Stellar Drive", price: "85,000 CR", icon: "fa-database"},
-            {name: "Solar Flare", price: "95,000 CR", icon: "fa-sun"},
-            {name: "Ion Cannon", price: "65,000 CR", icon: "fa-bolt"}
+            {id: 1, name: "Core Quantum", price: 50000, icon: "fa-atom"},
+            {id: 2, name: "Celestial Blade", price: 50000, icon: "fa-sword"},
+            {id: 3, name: "Hyper-Loop", price: 50000, icon: "fa-infinity"},
+            {id: 4, name: "Cyber Neural", price: 75000, icon: "fa-microchip"},
+            {id: 5, name: "Void Engine", price: 90000, icon: "fa-rocket"},
+            {id: 6, name: "Plasma Shield", price: 45000, icon: "fa-shield-halved"},
+            {id: 7, name: "Gravity Core", price: 60000, icon: "fa-globe"},
+            {id: 8, name: "Titan Gear", price: 110000, icon: "fa-gear"},
+            {id: 9, name: "Nebula Lens", price: 35000, icon: "fa-camera"},
+            {id: 10, name: "Stellar Drive", price: 85000, icon: "fa-database"},
+            {id: 11, name: "Solar Flare", price: 95000, icon: "fa-sun"},
+            {id: 12, name: "Ion Cannon", price: 65000, icon: "fa-bolt"}
         ];
 
-        function addToCart() {
-            const count = document.getElementById('cart-count');
-            count.innerText = parseInt(count.innerText) + 1;
-            count.classList.add('animate-bounce-cart');
-            setTimeout(() => count.classList.remove('animate-bounce-cart'), 300);
+        let cart = [];
+
+        function changeQty(id, delta) {
+            const input = document.getElementById(`qty-${id}`);
+            let val = parseInt(input.value) + delta;
+            if (val < 1) val = 1;
+            input.value = val;
         }
 
-        function showCheckoutModal() { document.getElementById('checkout-modal').classList.remove('hidden'); }
+        function toggleCartSidebar() {
+            const sidebar = document.getElementById('cart-sidebar');
+            sidebar.classList.toggle('translate-x-full');
+        }
+
+        function addToCart(id) {
+            const qty = parseInt(document.getElementById(`qty-${id}`).value);
+            const product = products.find(p => p.id === id);
+            
+            const existingItem = cart.find(item => item.id === id);
+            if (existingItem) {
+                existingItem.qty += qty;
+            } else {
+                cart.push({ ...product, qty: qty });
+            }
+
+            updateCartUI();
+
+            const count = document.getElementById('cart-count');
+            count.classList.add('animate-bounce-cart');
+            setTimeout(() => count.classList.remove('animate-bounce-cart'), 300);
+
+            const alertText = document.getElementById(`alert-${id}`);
+            alertText.classList.remove('hidden', 'opacity-0');
+            alertText.classList.add('opacity-100');
+
+            setTimeout(() => {
+                alertText.classList.remove('opacity-100');
+                alertText.classList.add('opacity-0');
+                setTimeout(() => alertText.classList.add('hidden'), 300);
+            }, 2000);
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cart-items-container');
+            const totalCount = document.getElementById('cart-count');
+            const totalSum = document.getElementById('cart-total');
+            const emptyMsg = document.getElementById('empty-cart-msg');
+
+            if (cart.length === 0) {
+                container.innerHTML = `<p class="text-gray-400 text-center mt-10" id="empty-cart-msg">السلة فارغة حالياً</p>`;
+                totalCount.innerText = '0';
+                totalSum.innerText = '0 CR';
+                return;
+            }
+
+            container.innerHTML = '';
+            let totalItems = 0;
+            let totalPrice = 0;
+
+            cart.forEach(item => {
+                totalItems += item.qty;
+                totalPrice += (item.price * item.qty);
+
+                container.innerHTML += `
+                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-2xl border border-white/10">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid ${item.icon} text-2xl text-blue-500"></i>
+                            <div class="text-right">
+                                <h4 class="font-bold text-sm">${item.name}</h4>
+                                <p class="text-xs text-gray-400">${item.price.toLocaleString()} CR × ${item.qty}</p>
+                            </div>
+                        </div>
+                        <button onclick="removeFromCart(${item.id})" class="text-red-400 hover:text-red-500 p-2"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                `;
+            });
+
+            totalCount.innerText = totalItems;
+            totalSum.innerText = totalPrice.toLocaleString() + ' CR';
+        }
+
+        function showCheckoutModal() { 
+            document.getElementById('cart-sidebar').classList.add('translate-x-full');
+            document.getElementById('checkout-modal').classList.remove('hidden'); 
+        }
         function closeCheckoutModal() { document.getElementById('checkout-modal').classList.add('hidden'); }
 
         const container = document.getElementById('products');
         products.forEach(p => {
             container.innerHTML += `
-                <div class="glass p-8 rounded-3xl card-hover text-center border border-white/10">
-                    <i class="fa-solid ${p.icon} text-5xl text-blue-500 mb-6"></i>
-                    <h3 class="text-xl font-bold mb-2">${p.name}</h3>
-                    <p class="text-blue-400 font-black mb-6">${p.price}</p>
-                    <button onclick="addToCart()" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 transition font-bold">شراء الآن</button>
+                <div class="glass p-8 rounded-3xl card-hover text-center border border-white/10 flex flex-col justify-between relative">
+                    <div>
+                        <i class="fa-solid ${p.icon} text-5xl text-blue-500 mb-6"></i>
+                        <h3 class="text-xl font-bold mb-2">${p.name}</h3>
+                        <p class="text-blue-400 font-black mb-4">${p.price.toLocaleString()} CR</p>
+                    </div>
+                    
+                    <div>
+                        <div class="flex items-center justify-center gap-3 mb-4 bg-white/5 rounded-xl p-2 max-w-[150px] mx-auto border border-white/10">
+                            <button onclick="changeQty(${p.id}, 1)" class="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 font-bold hover:bg-blue-600 hover:text-white transition">+</button>
+                            <input type="text" id="qty-${p.id}" value="1" readonly class="w-8 text-center bg-transparent font-bold text-inherit outline-none">
+                            <button onclick="changeQty(${p.id}, -1)" class="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 font-bold hover:bg-blue-600 hover:text-white transition">-</button>
+                        </div>
+                        
+                        <button onclick="addToCart(${p.id})" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 transition font-bold mb-2">شراء الآن</button>
+                        
+                        <div id="alert-${p.id}" class="hidden opacity-0 text-green-400 font-medium text-sm transition-all duration-300">
+                            <i class="fa-solid fa-circle-check ml-1"></i>تم الإضافة إلى السلة
+                        </div>
+                    </div>
                 </div>
             `;
         });
