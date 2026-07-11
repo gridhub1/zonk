@@ -41,7 +41,7 @@
 </head>
 <body class="light p-4 md:p-12">
 
-    <nav class="flex flex-col sm:flex-row justify-between items-center mb-20 gap-4">
+    <nav class="flex flex-col sm:flex-row justify-between items-center mb-10 gap-4">
         <h1 class="text-6xl font-black italic tracking-tighter text-red-600 dark:text-red-500 neon-text">ZONK</h1>
         <div class="flex items-center gap-8 text-sm font-bold uppercase tracking-widest">
             <span class="cursor-pointer hover:text-red-600 dark:hover:text-red-400 transition">الرئيسية</span>
@@ -54,6 +54,20 @@
             </button>
         </div>
     </nav>
+
+    <div class="max-w-4xl mx-auto mb-16 space-y-6">
+        <div class="relative">
+            <input type="text" id="search-input" oninput="filterProducts()" placeholder="ابحث عن المنتجات هنا..." class="w-full p-4 pr-12 bg-gray-50 dark:bg-black/20 rounded-2xl border border-red-500/20 outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition text-inherit text-lg shadow-sm">
+            <i class="fa-solid fa-magnifying-glass absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl"></i>
+        </div>
+        
+        <div class="flex flex-wrap justify-center gap-3 text-sm font-bold">
+            <button onclick="filterCategory('all')" id="btn-all" class="px-6 py-2.5 rounded-xl bg-red-600 text-white shadow-md transition">الكل</button>
+            <button onclick="filterCategory('food')" id="btn-food" class="px-6 py-2.5 rounded-xl bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-200 hover:bg-red-500/10 transition">الماكولات</button>
+            <button onclick="filterCategory('drinks')" id="btn-drinks" class="px-6 py-2.5 rounded-xl bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-200 hover:bg-red-500/10 transition">البيبسي والمشروبات</button>
+            <button onclick="filterCategory('detergents')" id="btn-detergents" class="px-6 py-2.5 rounded-xl bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-200 hover:bg-red-500/10 transition">المنظفات</button>
+        </div>
+    </div>
 
     <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8" id="products"></section>
 
@@ -87,22 +101,24 @@
     </div>
 
     <script>
+        // مصفوفة المنتجات المعدلة لتتوافق مع التصنيفات المطلوبة بدقة وعناية
         const products = [
-            {id: 1, name: "Core Quantum", price: 50000, icon: "fa-atom"},
-            {id: 2, name: "Celestial Blade", price: 50000, icon: "fa-sword"},
-            {id: 3, name: "Hyper-Loop", price: 50000, icon: "fa-infinity"},
-            {id: 4, name: "Cyber Neural", price: 75000, icon: "fa-microchip"},
-            {id: 5, name: "Void Engine", price: 90000, icon: "fa-rocket"},
-            {id: 6, name: "Plasma Shield", price: 45000, icon: "fa-shield-halved"},
-            {id: 7, name: "Gravity Core", price: 60000, icon: "fa-globe"},
-            {id: 8, name: "Titan Gear", price: 110000, icon: "fa-gear"},
-            {id: 9, name: "Nebula Lens", price: 35000, icon: "fa-camera"},
-            {id: 10, name: "Stellar Drive", price: 85000, icon: "fa-database"},
-            {id: 11, name: "Solar Flare", price: 95000, icon: "fa-sun"},
-            {id: 12, name: "Ion Cannon", price: 65000, icon: "fa-bolt"}
+            {id: 1, name: "وجبة برجر دبل كلاسيك", price: 150, icon: "fa-hamburger", category: "food"},
+            {id: 2, name: "بيتزا سوبر سوبريم", price: 220, icon: "fa-pizza-slice", category: "food"},
+            {id: 3, name: "عبوة بيبسي كانز 330 مل", price: 15, icon: "fa-bottle-water", category: "drinks"},
+            {id: 4, name: "كوكاكولا زيرو عائلية", price: 40, icon: "fa-wine-bottle", category: "drinks"},
+            {id: 5, name: "مسحوق غسيل أوتوماتيك", price: 180, icon: "fa-soap", category: "detergents"},
+            {id: 6, name: "سائل غسيل الأطباق مركز", price: 45, icon: "fa-pump-soap", category: "detergents"},
+            {id: 7, name: "باستا إيطالي بالصوص", price: 90, icon: "fa-bowl-food", category: "food"},
+            {id: 8, name: "عصير برتقال طبيعي فريش", price: 30, icon: "fa-glass-water", category: "drinks"},
+            {id: 9, name: "منظف زجاج وملمع سحري", price: 35, icon: "fa-spray-can-sparkles", category: "detergents"},
+            {id: 10, name: "ساندوتش كرانشي دجاج", price: 110, icon: "fa-bread-slice", category: "food"},
+            {id: 11, name: "مياه معدنية نقية كرتونة", price: 65, icon: "fa-faucet-drip", category: "drinks"},
+            {id: 12, name: "مطهر ومعقم أرضيات قوي", price: 75, icon: "fa-bucket", category: "detergents"}
         ];
 
         let cart = [];
+        let currentCategory = 'all';
 
         function changeQty(id, delta) {
             const input = document.getElementById(`qty-${id}`);
@@ -197,7 +213,6 @@
         }
         function closeCheckoutModal() { document.getElementById('checkout-modal').classList.add('hidden'); }
 
-        // دالة تجميع الطلب وإرساله إلى رقم واتساب الموضح
         function sendOrderToWhatsApp() {
             const name = document.getElementById('cust-name').value.trim();
             const phone = document.getElementById('cust-phone').value.trim();
@@ -233,40 +248,83 @@
 
             window.open(whatsappUrl, '_blank');
             
-            // تصفير السلة وإغلاق النافذة بعد الإرسال
             cart = [];
             updateCartUI();
             closeCheckoutModal();
         }
 
-        const container = document.getElementById('products');
-        products.forEach(p => {
-            container.innerHTML += `
-                <div class="glass p-8 rounded-3xl card-hover text-center flex flex-col justify-between relative group">
-                    <div>
-                        <div class="w-20 h-20 bg-red-600/10 dark:bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                            <i class="fa-solid ${p.icon} text-4xl text-red-600 dark:text-red-400"></i>
-                        </div>
-                        <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">${p.name}</h3>
-                        <p class="text-red-600 dark:text-red-400 font-black mb-4 text-lg">${p.price.toLocaleString()} CR</p>
-                    </div>
-                    
-                    <div>
-                        <div class="flex items-center justify-center gap-3 mb-4 bg-red-500/5 dark:bg-white/5 rounded-xl p-2 max-w-[150px] mx-auto border border-red-500/10 dark:border-white/10">
-                            <button onclick="changeQty(${p.id}, 1)" class="w-8 h-8 rounded-lg bg-red-600 text-white font-bold hover:bg-red-700 transition">+</button>
-                            <input type="text" id="qty-${p.id}" value="1" readonly class="w-8 text-center bg-transparent font-bold text-inherit outline-none">
-                            <button onclick="changeQty(${p.id}, -1)" class="w-8 h-8 rounded-lg bg-red-600 text-white font-bold hover:bg-red-700 transition">-</button>
+        // دالة عرض المنتجات المحسنة والمحدثة لتتوافق مع الفلترة والبحث والأقسام
+        function renderProducts(productsList) {
+            const container = document.getElementById('products');
+            container.innerHTML = '';
+            
+            if(productsList.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center p-10 text-gray-400 text-lg">لم يتم العثور على أي منتجات مطابقة للبحث!</div>`;
+                return;
+            }
+
+            productsList.forEach(p => {
+                container.innerHTML += `
+                    <div class="glass p-8 rounded-3xl card-hover text-center flex flex-col justify-between relative group">
+                        <div>
+                            <div class="w-20 h-20 bg-red-600/10 dark:bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                                <i class="fa-solid ${p.icon} text-4xl text-red-600 dark:text-red-400"></i>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">${p.name}</h3>
+                            <p class="text-red-600 dark:text-red-400 font-black mb-4 text-lg">${p.price.toLocaleString()} CR</p>
                         </div>
                         
-                        <button onclick="addToCart(${p.id})" class="w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white transition font-bold mb-2 shadow-md shadow-red-600/20">شراء الآن</button>
-                        
-                        <div id="alert-${p.id}" class="hidden opacity-0 text-emerald-600 dark:text-emerald-400 font-bold text-sm transition-all duration-300">
-                            <i class="fa-solid fa-circle-check ml-1"></i>تم الإضافة إلى السلة
+                        <div>
+                            <div class="flex items-center justify-center gap-3 mb-4 bg-red-500/5 dark:bg-white/5 rounded-xl p-2 max-w-[150px] mx-auto border border-red-500/10 dark:border-white/10">
+                                <button onclick="changeQty(${p.id}, 1)" class="w-8 h-8 rounded-lg bg-red-600 text-white font-bold hover:bg-red-700 transition">+</button>
+                                <input type="text" id="qty-${p.id}" value="1" readonly class="w-8 text-center bg-transparent font-bold text-inherit outline-none">
+                                <button onclick="changeQty(${p.id}, -1)" class="w-8 h-8 rounded-lg bg-red-600 text-white font-bold hover:bg-red-700 transition">-</button>
+                            </div>
+                            
+                            <button onclick="addToCart(${p.id})" class="w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white transition font-bold mb-2 shadow-md shadow-red-600/20">شراء الآن</button>
+                            
+                            <div id="alert-${p.id}" class="hidden opacity-0 text-emerald-600 dark:text-emerald-400 font-bold text-sm transition-all duration-300">
+                                <i class="fa-solid fa-circle-check ml-1"></i>تم الإضافة إلى السلة
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
-        });
+                `;
+            });
+        }
+
+        // دالة الفلترة الذكية المزدوجة (تدمج بين البحث النصي والقسم النشط حالياً)
+        function filterProducts() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            
+            const filtered = products.filter(p => {
+                const matchesCategory = (currentCategory === 'all' || p.category === currentCategory);
+                const matchesSearch = p.name.toLowerCase().includes(query);
+                return matchesCategory && matchesSearch;
+            });
+            
+            renderProducts(filtered);
+        }
+
+        // دالة التبديل بين الأقسام وتغيير لون الأزرار النشطة ديناميكياً
+        function filterCategory(category) {
+            currentCategory = category;
+            
+            // تحديث تصميم أزرار التصفية لتمييز الزر النشط حالياً بشكل عصري
+            const categories = ['all', 'food', 'drinks', 'detergents'];
+            categories.forEach(cat => {
+                const btn = document.getElementById(`btn-${cat}`);
+                if(cat === category) {
+                    btn.className = "px-6 py-2.5 rounded-xl bg-red-600 text-white shadow-md transition";
+                } else {
+                    btn.className = "px-6 py-2.5 rounded-xl bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-200 hover:bg-red-500/10 transition";
+                }
+            });
+            
+            filterProducts();
+        }
+
+        // تشغيل العرض الأولي للمنتجات بمجرد فتح الصفحة
+        renderProducts(products);
     </script>
 </body>
 </html>
