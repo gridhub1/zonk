@@ -1,32 +1,61 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="dark">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: {} }
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;900&display=swap');
-        body { font-family: 'Tajawal', sans-serif; background: radial-gradient(circle at center, #0f172a, #020617); color: white; min-height: 100vh; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        body { font-family: 'Tajawal', sans-serif; transition: background 0.5s ease; }
+        .dark body { background: radial-gradient(circle at center, #0f172a, #020617); color: white; }
+        .light body { background: #f8fafc; color: #1e293b; }
+        .glass { backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .dark .glass { background: rgba(255, 255, 255, 0.05); }
+        .light .glass { background: rgba(255, 255, 255, 0.8); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .neon-text { text-shadow: 0 0 10px #3b82f6, 0 0 20px #3b82f6; }
         .card-hover:hover { transform: translateY(-15px) scale(1.02); box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3); }
-        .gradient-border { border-image: linear-gradient(to right, #3b82f6, #8b5cf6) 1; }
+        @media (max-width: 640px) { .text-6xl { font-size: 2.5rem; } }
     </style>
 </head>
 <body class="p-4 md:p-12">
 
-    <nav class="flex justify-between items-center mb-20">
-        <h1 class="text-6xl font-black italic tracking-tighter text-blue-500 neon-text">ZONK</h1>
-        <div class="flex gap-8 text-sm uppercase tracking-widest cursor-pointer">
-            <span class="hover:text-blue-400 transition">الرئيسية</span>
-            <span class="hover:text-blue-400 transition">المتجر</span>
-            <span class="bg-blue-600 px-6 py-2 rounded-full font-bold">تسجيل الدخول</span>
+    <nav class="flex flex-col sm:flex-row justify-between items-center mb-10 md:mb-20 gap-4">
+        <h1 class="text-4xl sm:text-6xl font-black italic tracking-tighter text-blue-500 neon-text">ZONK</h1>
+        <div class="flex items-center gap-4 sm:gap-8 text-xs sm:text-sm uppercase tracking-widest">
+            <span class="cursor-pointer hover:text-blue-500 transition">الرئيسية</span>
+            <span class="cursor-pointer hover:text-blue-500 transition" onclick="toggleCart()">السلة (<span id="cart-count">0</span>)</span>
+            <button onclick="document.documentElement.classList.toggle('dark')" class="p-2 rounded-full bg-gray-200 dark:bg-gray-800">🌓</button>
         </div>
     </nav>
 
-    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" id="products">
-        </section>
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8" id="products"></section>
+
+    <div id="cart-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div class="glass w-full max-w-lg p-8 rounded-3xl text-center">
+            <h2 class="text-3xl font-bold mb-6">سلة التسوق</h2>
+            <div id="cart-items" class="mb-6 max-h-60 overflow-y-auto"></div>
+            <button onclick="showCheckout()" class="w-full py-4 rounded-2xl bg-blue-600 font-bold">إتمام الشراء</button>
+            <button onclick="toggleCart()" class="mt-4 text-gray-400">إغلاق</button>
+        </div>
+    </div>
+
+    <div id="checkout-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div class="glass w-full max-w-lg p-8 rounded-3xl">
+            <h2 class="text-2xl font-bold mb-4">بيانات التوصيل</h2>
+            <input type="text" placeholder="الاسم الكامل" class="w-full p-3 mb-3 bg-white/10 rounded-xl border border-white/20">
+            <input type="text" placeholder="العنوان" class="w-full p-3 mb-3 bg-white/10 rounded-xl border border-white/20">
+            <button onclick="alert('تم الطلب بنجاح!')" class="w-full py-4 rounded-2xl bg-green-600 font-bold">تأكيد الطلب</button>
+        </div>
+    </div>
 
     <script>
+        let cart = [];
         const products = [
             {name: "Core Quantum", price: "50,000 CR", img: "https://images.unsplash.com/photo-1614729939124-032f0b56c39f?auto=format&fit=crop&w=800&q=80"},
             {name: "Celestial Blade", price: "50,000 CR", img: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=800&q=80"},
@@ -34,18 +63,32 @@
             {name: "Infinite Orb", price: "50,000 CR", img: "https://images.unsplash.com/photo-1544652478-6853079a556d?auto=format&fit=crop&w=800&q=80"}
         ];
 
+        function addToCart(name, price) {
+            cart.push({name, price});
+            document.getElementById('cart-count').innerText = cart.length;
+            alert("تمت الإضافة للسلة!");
+        }
+
+        function toggleCart() {
+            const modal = document.getElementById('cart-modal');
+            const items = document.getElementById('cart-items');
+            items.innerHTML = cart.map(item => `<div class="flex justify-between py-2 border-b border-white/10">${item.name} - ${item.price}</div>`).join('');
+            modal.classList.toggle('hidden');
+        }
+
+        function showCheckout() {
+            document.getElementById('cart-modal').classList.add('hidden');
+            document.getElementById('checkout-modal').classList.remove('hidden');
+        }
+
         const container = document.getElementById('products');
         products.forEach(p => {
             container.innerHTML += `
                 <div class="glass p-5 rounded-3xl card-hover transition-all duration-500 border border-white/10">
-                    <div class="overflow-hidden rounded-2xl mb-4">
-                        <img src="${p.img}" class="w-full h-64 object-cover hover:scale-110 transition-transform duration-700">
-                    </div>
-                    <h3 class="text-2xl font-bold">${p.name}</h3>
-                    <p class="text-blue-400 text-lg font-black mt-2">${p.price}</p>
-                    <button class="w-full mt-6 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 font-bold hover:from-purple-600 hover:to-blue-600 transition shadow-lg shadow-blue-900/50">
-                        اقتناء المنتج
-                    </button>
+                    <img src="${p.img}" class="w-full h-48 object-cover rounded-2xl mb-4">
+                    <h3 class="text-xl font-bold">${p.name}</h3>
+                    <p class="text-blue-500 font-black mt-2">${p.price}</p>
+                    <button onclick="addToCart('${p.name}', '${p.price}')" class="w-full mt-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 font-bold">إضافة للسلة</button>
                 </div>
             `;
         });
